@@ -25,6 +25,8 @@ async def cek_reminder(context: ContextTypes.DEFAULT_TYPE):
                 selisih_jam = (deadline - now).total_seconds() / 3600
 
                 # Notif ketika masuk window waktu yang sesuai
+                # Kita cek jika selisih jam kurang dari target (misal 24 jam)
+                # tapi masih positif (belum lewat deadline)
                 if 0 < selisih_jam <= jam_sebelum:
                     mk = f" ({t['mata_kuliah']})" if t["mata_kuliah"] else ""
                     pesan = (

@@ -37,34 +37,32 @@ JADWAL = {
 
 NAMA_HARI = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
 
-async def kirim_jadwal_harian(context: ContextTypes.DEFAULT_TYPE):
-    """Job rutin untuk mengirim jadwal matkul."""
-    now = datetime.now(TZ)
-    hari_idx = now.weekday()  # 0=Senin, ..., 6=Minggu
-    
+def get_jadwal_msg(hari_idx: int) -> str:
+    """Mengembalikan teks jadwal berdasarkan index hari (0-6)."""
     if hari_idx not in JADWAL:
-        logger.info(f"Tidak ada jadwal untuk hari {NAMA_HARI[hari_idx]}")
-        return
+        return f"📭 Tidak ada jadwal kuliah untuk hari *{NAMA_HARI[hari_idx]}*."
 
     daftar_matkul = JADWAL[hari_idx]
     pesan = f"📅 *JADWAL MATKUL HARI INI ({NAMA_HARI[hari_idx]})*\n\n"
     pesan += "\n".join([f"🔹 {m}" for m in daftar_matkul])
+    return pesan
+
+async def kirim_jadwal_harian(context: ContextTypes.DEFAULT_TYPE):
+    """Job rutin (opsional) untuk mengirim jadwal matkul."""
+    now = datetime.now(TZ)
+    hari_idx = now.weekday()
     
-    users = get_all_users()
-    if not users:
-        logger.warning("Tidak ada user untuk dikirimi jadwal.")
+    pesan = get_jadwal_msg(hari_idx)
+    if "Tidak ada jadwal" in pesan:
+        logger.info(f"Skip kirim: {pesan}")
         return
 
-    count = 0
+    users = get_all_users()
+    if not users:
+        return
+
     for user_id in users:
         try:
-            await context.bot.send_message(
-                chat_id=user_id,
-                text=pesan,
-                parse_mode="Markdown"
-            )
-            count += 1
+            await context.bot.send_message(chat_id=user_id, text=pesan, parse_mode="Markdown")
         except Exception as e:
             logger.error(f"Gagal kirim jadwal ke {user_id}: {e}")
-
-    logger.info(f"Jadwal harian terkirim ke {count} user.")

@@ -11,6 +11,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/list   — Lihat semua tugas aktif\n"
         "/selesai — Tandai tugas selesai\n"
         "/hapus  — Hapus tugas\n"
+        "/jadwal — Lihat jadwal matkul hari ini\n"
         "/help   — Bantuan lengkap\n"
     )
     await update.message.reply_text(teks, parse_mode="Markdown")
@@ -29,8 +30,9 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "`/list`\n\n"
         "*Tandai selesai:*\n"
         "`/selesai <id>` — contoh: `/selesai 3`\n\n"
-        "*Hapus tugas:*\n"
         "`/hapus <id>` — contoh: `/hapus 3`\n\n"
+        "*Lihat jadwal matkul hari ini:*\n"
+        "`/jadwal`\n\n"
         "🔔 Bot akan otomatis mengingatkan H-1 hari dan H-1 jam sebelum deadline."
     )
     await update.message.reply_text(teks, parse_mode="Markdown")
