@@ -86,3 +86,10 @@ def tandai_notif(task_id: int, level: str):
     with get_connection() as conn:
         conn.execute(f"UPDATE tasks SET {col}=1 WHERE id=?", (task_id,))
         conn.commit()
+
+
+def get_all_users() -> list[int]:
+    """Ambil semua user_id unik yang pernah mendaftarkan tugas."""
+    with get_connection() as conn:
+        rows = conn.execute("SELECT DISTINCT user_id FROM tasks").fetchall()
+        return [r[0] for r in rows]

@@ -8,6 +8,9 @@ from config import BOT_TOKEN, WEBHOOK_URL
 from database.db import init_db
 from handlers import start, help_cmd, cmd_tambah, cmd_list, cmd_selesai, cmd_hapus
 from services.reminder import cek_reminder
+from services.schedule import kirim_jadwal_harian
+from utils.helpers import TZ
+from datetime import time
 
 # Setup Logging
 logging.basicConfig(
@@ -32,6 +35,7 @@ app_ptb.add_handler(CommandHandler("hapus",   cmd_hapus))
 
 # 4. Jadwalkan Job Queue
 app_ptb.job_queue.run_repeating(cek_reminder, interval=60, first=10)
+app_ptb.job_queue.run_daily(kirim_jadwal_harian, time=time(6, 0, tzinfo=TZ))
 
 # 5. Flask App
 app_flask = Flask(__name__)
