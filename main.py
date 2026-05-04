@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# 1. Inisialisasi PTB Application
+# 1. Inisialisasi PTB Application secara Global
 app_ptb = ApplicationBuilder().token(BOT_TOKEN).build()
 
 # 2. Inisialisasi Database
@@ -33,35 +33,36 @@ app_ptb.add_handler(CommandHandler("hapus",   cmd_hapus))
 # 4. Jadwalkan Job Queue
 app_ptb.job_queue.run_repeating(cek_reminder, interval=60, first=10)
 
-# 5. Flask App untuk Webhook (PythonAnywhere)
+# 5. Flask App
 app_flask = Flask(__name__)
+
+# Inisialisasi loop global untuk performa lebih baik
+loop = asyncio.get_event_loop()
 
 @app_flask.route(f"/{BOT_TOKEN}", methods=["POST"])
 def webhook():
-    """Endpoint yang akan dipanggil oleh Telegram."""
     if request.method == "POST":
-        # Jalankan inisialisasi jika belum (penting untuk server WSGI)
-        if not app_ptb.running:
-            asyncio.run(app_ptb.initialize())
-            asyncio.run(app_ptb.start())
-            logger.info("PTB Application initialized and started.")
-
-        update = Update.de_json(request.get_json(), app_ptb.bot)
-        asyncio.run(app_ptb.process_update(update))
+        try:
+            # Pastikan bot sudah diinisialisasi sekali saja
+            if not app_ptb.running:
+                loop.run_until_complete(app_ptb.initialize())
+                loop.run_until_complete(app_ptb.start())
+            
+            update = Update.de_json(request.get_json(), app_ptb.bot)
+            loop.run_until_complete(app_ptb.process_update(update))
+        except Exception as e:
+            logger.error(f"Error processing update: {e}")
+            
         return "OK", 200
 
 @app_flask.route("/", methods=["GET"])
 def index():
-    return "Bot is running!", 200
+    return "Bot is running efficiently!", 200
 
 def main():
     if WEBHOOK_URL:
-        # Mode Webhook (untuk testing lokal atau server lain)
-        logger.info(f"Berjalan dalam mode Webhook: {WEBHOOK_URL}/{BOT_TOKEN}")
         app_flask.run(port=8080)
     else:
-        # Mode Polling (untuk development lokal)
-        logger.info("Berjalan dalam mode Polling.")
         app_ptb.run_polling()
 
 if __name__ == "__main__":
